@@ -1,12 +1,16 @@
 package io.junhyunny;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -14,14 +18,24 @@ import lombok.extern.log4j.Log4j2;
 @SpringBootTest
 public class GithubApiTest {
 
-	@Value("${client-token.github}")
-	private String githubToken;
-
+	@SuppressWarnings({ "unchecked" })
 	@Test
 	void test() throws IOException {
-		GitHub github = new GitHubBuilder().withOAuthToken(githubToken).build();
-		github.checkApiUrlValidity();
-		log.info(github.getRepository("Junhyunny/junhyunny.github.io"));
-	}
 
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
+
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(headers);
+
+		RestTemplate restTemplate = new RestTemplate();
+		List<Map<String, Object>> repoList = restTemplate.exchange("https://api.github.com/users/junhyunny/repos", HttpMethod.GET, entity, List.class).getBody();
+		for (Map<String, Object> repo : repoList) {
+			log.info("repo url: " + repo.get("name"));
+			log.info("pushed_at: " + repo.get("pushed_at"));
+			String time = (String) repo.get("pushed_at");
+			time = time.replace("T", " ");
+			time = time.replace("Z", "");
+			log.info(Timestamp.valueOf(time));
+		}
+	}
 }

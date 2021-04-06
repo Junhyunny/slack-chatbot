@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-@SpringBootTest
+@SpringBootTest(value = "client-slackToken.slack=my-slack-token")
 class SlackChatBotTest {
 
 	@Value("${client-slackToken.slack}")
@@ -51,22 +51,33 @@ class SlackChatBotTest {
 		log.info(restTemplate.exchange("https://slack.com/api/conversations.history?channel=C01TD73AZEF", HttpMethod.GET, entity, Map.class).getBody());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	void postSomeMessage() {
 
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
+		headers.set("Authorization", "Bearer " + slackToken);
+
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(headers);
+
+		RestTemplate restTemplate = new RestTemplate();
+		Map<String, Object> response = restTemplate.exchange("https://slack.com/api/conversations.history?channel=C01TD73AZEF", HttpMethod.GET, entity, Map.class).getBody();
+
+		log.info(response);
+
 		Map<String, Object> body = new HashMap<>();
-		body.put("text", "Hello slack-chatbot");
+		body.put("text", "Hello slack-chatbot again again");
 		body.put("reply_broadcast", true);
-		body.put("thread_ts", 1617703059.000600);
+		body.put("thread_ts", response.get("ts"));
 		body.put("channel", "C01TD73AZEF");
 
-		HttpHeaders headers = new HttpHeaders();
+		headers = new HttpHeaders();
 		headers.set("Content-Type", "application/json; charset=utf-8");
 		headers.set("Authorization", "Bearer " + slackToken);
 
-		HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(body, headers);
+		entity = new HttpEntity<Map<String, Object>>(body, headers);
 
-		RestTemplate restTemplate = new RestTemplate();
 		log.info(restTemplate.exchange("https://slack.com/api/chat.postMessage", HttpMethod.POST, entity, Map.class).getBody());
 	}
 }
