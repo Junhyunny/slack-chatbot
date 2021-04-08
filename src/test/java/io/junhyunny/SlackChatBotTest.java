@@ -33,6 +33,10 @@ class SlackChatBotTest {
 
 		RestTemplate restTemplate = new RestTemplate();
 		List<Map<String, Object>> channels = (List) restTemplate.exchange("https://slack.com/api/conversations.list", HttpMethod.GET, entity, Map.class).getBody().get("channels");
+		if(channels == null) {
+			return;
+		}
+
 		for (Map<String, Object> channel : channels) {
 			log.info(channel);
 		}
@@ -40,18 +44,15 @@ class SlackChatBotTest {
 
 	@Test
 	void getChannelThreadTs() {
-		//
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/json");
 		headers.set("Authorization", "Bearer " + slackToken);
-
 		HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(headers);
-
 		RestTemplate restTemplate = new RestTemplate();
 		log.info(restTemplate.exchange("https://slack.com/api/conversations.history?channel=C01TD73AZEF", HttpMethod.GET, entity, Map.class).getBody());
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	void postSomeMessage() {
 
@@ -62,14 +63,17 @@ class SlackChatBotTest {
 		HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(headers);
 
 		RestTemplate restTemplate = new RestTemplate();
-		Map<String, Object> response = restTemplate.exchange("https://slack.com/api/conversations.history?channel=C01TD73AZEF", HttpMethod.GET, entity, Map.class).getBody();
 
-		log.info(response);
+		Map<String, Object> response = restTemplate.exchange("https://slack.com/api/conversations.history?channel=C01TD73AZEF", HttpMethod.GET, entity, Map.class).getBody();
+		List<Map<String, Object>> messages = (List) response.get("messages");
+		if (messages == null || messages.isEmpty()) {
+			return;
+		}
 
 		Map<String, Object> body = new HashMap<>();
-		body.put("text", "Hello slack-chatbot again again");
+		body.put("text", "Hello slack-chatbot");
 		body.put("reply_broadcast", true);
-		body.put("thread_ts", response.get("ts"));
+		// body.put("thread_ts", messages.get(0).get("ts"));
 		body.put("channel", "C01TD73AZEF");
 
 		headers = new HttpHeaders();
@@ -78,6 +82,6 @@ class SlackChatBotTest {
 
 		entity = new HttpEntity<Map<String, Object>>(body, headers);
 
-		log.info(restTemplate.exchange("https://slack.com/api/chat.postMessage", HttpMethod.POST, entity, Map.class).getBody());
+		log.info("result: " + restTemplate.exchange("https://slack.com/api/chat.postMessage", HttpMethod.POST, entity, Map.class).getBody());
 	}
 }
