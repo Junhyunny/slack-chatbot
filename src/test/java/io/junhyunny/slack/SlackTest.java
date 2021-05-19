@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 public class SlackTest {
 
-    private String slackToken = "your slack token";
+    private final String slackToken = "your slack token";
 
     @Test
     public void getMembersInChannel_normalChannelName_memberListSizeNotZero() {
