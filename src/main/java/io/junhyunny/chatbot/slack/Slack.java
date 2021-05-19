@@ -21,7 +21,7 @@ public class Slack {
 
     private final HttpHeaders headers;
 
-    private final String[] messages = new String[]{"commit 할 시간이에요.", "오늘 commit 하고 놀고 있는거에요?", "commit 안하면 밥도 먹지마세요.", "미래를 위해 공부해야죠. 어린애처럼 굴래요?"};
+    private final String[] messages = new String[]{"commit 할 시간이에요.", "오늘 commit 하고 놀고 있는거에요?", "commit 안하면 밥도 먹지마세요.", "미래를 위해 공부해야죠. 공부하고 commit 하세요."};
 
     public Slack(String slackToken) {
         restTemplate = new RestTemplate();
@@ -80,23 +80,25 @@ public class Slack {
         return result;
     }
 
-    public void sendPushMessage(String channelName) {
-
-        String channelId = getChannelId(channelName);
-        if (channelId == null) {
-            log.error("channel id를 구하지 못하였습니다.");
-            return;
-        }
-
-        String message = messages[new Random().nextInt(999) % 4];
-
+    public Map<String, Object> getBody(String message, String channelId) {
         Map<String, Object> body = new HashMap<>();
         body.put("text", message);
         body.put("reply_broadcast", true);
         body.put("channel", channelId);
+        return body;
+    }
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(body, headers);
+    public void sendPushMessage(String memberName, String channelId) {
+        String message = messages[new Random().nextInt(999) % 4];
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(getBody(memberName + "님, " + message, channelId), headers);
+        log.info("api call response message: " + restTemplate.exchange("https://slack.com/api/chat.postMessage", HttpMethod.POST, entity, Map.class).getBody());
+    }
 
+    public void sendNotFoundErrorMessage(String memberName, String channelId) {
+        StringBuffer message = new StringBuffer(memberName);
+        message.append(" 이름으로 존재하는 Github 원격 저장소가 존재하지 않습니다.\n");
+        message.append("1 Day 1 Commit 여부를 확인하시려면 Github 'userName' 을 사용해주세요.");
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(getBody(message.toString(), channelId), headers);
         log.info("api call response message: " + restTemplate.exchange("https://slack.com/api/chat.postMessage", HttpMethod.POST, entity, Map.class).getBody());
     }
 }
