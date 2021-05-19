@@ -2,7 +2,6 @@
 ## 슬랙 채팅 봇
 최초 Github commit 여부를 확인해주는 개인 프로젝트로 시작하였습니다. 
 Team Geneuin 업무를 돕기 위한 SLACK 채팅 봇입니다. 
-추가되는 기능들에 
 
 ### 단순 Commit 여부 확인 기능, 2021-04-08
 - AWS Lambda 활용
